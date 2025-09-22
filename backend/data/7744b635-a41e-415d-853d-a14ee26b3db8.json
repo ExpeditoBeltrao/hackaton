@@ -1,0 +1,40 @@
+{
+  "components": [
+    {
+      "id": "c1",
+      "label": "Usuários SEI",
+      "type": "user",
+      "bbox": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c2",
+      "label": "AWS Shield",
+      "type": "service",
+      "bbox": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "graph": {
+    "nodes": [
+      "c1",
+      "c2"
+    ],
+    "edges": [
+      [
+        "c1",
+        "c2"
+      ]
+    ]
+  },
+  "analysis_id": "7744b635-a41e-415d-853d-a14ee26b3db8",
+  "image_url": "/static/7744b635-a41e-415d-853d-a14ee26b3db8_aws.png"
+}

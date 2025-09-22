@@ -1,0 +1,72 @@
+{
+  "components": [
+    {
+      "id": "c1",
+      "label": "Usuários SEI",
+      "type": "user",
+      "bbox": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c2",
+      "label": "AWS Shield",
+      "type": "service",
+      "bbox": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c3",
+      "label": "Amazon CloudFront",
+      "type": "service",
+      "bbox": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c4",
+      "label": "AWS WAF",
+      "type": "service",
+      "bbox": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "graph": {
+    "nodes": [
+      "c1",
+      "c2",
+      "c3",
+      "c4"
+    ],
+    "edges": [
+      [
+        "c1",
+        "c2"
+      ],
+      [
+        "c2",
+        "c3"
+      ],
+      [
+        "c3",
+        "c4"
+      ]
+    ]
+  },
+  "analysis_id": "004dc312-eb67-468e-a6dc-f0d92e26788a",
+  "image_url": "/static/004dc312-eb67-468e-a6dc-f0d92e26788a_short_aws_diagram.png"
+}
