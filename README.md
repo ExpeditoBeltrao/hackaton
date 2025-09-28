@@ -11,7 +11,6 @@ Aplicação web de análise de vulnerabilidades de sistemas baseada na metodolog
 * **Python 3.11+**
 * **FastAPI** (API REST)
 * **Uvicorn** (servidor ASGI)
-* **Pillow** (processamento de imagens)
 * **OpenAI API** (análise de diagramas e geração de STRIDE threats)
 
 ### Frontend
@@ -19,7 +18,6 @@ Aplicação web de análise de vulnerabilidades de sistemas baseada na metodolog
 * **React 18**
 * **React Router DOM** (navegação)
 * **Tailwind CSS** (estilização responsiva)
-* **shadcn/ui** (componentes UI: Card, Button)
 * **Framer Motion** (animações)
 * **Axios** (requisições HTTP)
 
@@ -28,23 +26,41 @@ Aplicação web de análise de vulnerabilidades de sistemas baseada na metodolog
 ## Estrutura do projeto
 
 ```
-project/
- ├── backend/
- │    ├── server.py
- │    ├── processing.py
- │    └── requirements.txt
- └── frontend/
-      ├── package.json
-      ├── tailwind.config.js
-      └── src/
-          ├── App.jsx
-          ├── index.css
-          └── pages/
-              ├── HomePage.jsx
-              ├── UploadPage.jsx
-              ├── AnalysisPage.jsx
-              ├── StridePage.jsx
-              └── ReportPage.jsx
+.
+├── README.md
+├── .vscode/
+│   └── settings.json
+├── backend/
+│   ├── processing.py
+│   ├── requirements.txt
+│   ├── server.py
+│   ├── server_openai.py
+│   ├── __pycache__/
+│   │   ├── processing.cpython-312.pyc
+│   │   ├── server.cpython-312.pyc
+│   │   └── server_openai.cpython-312.pyc
+│   ├── data/
+│   ├── reports/
+│   ├── static/
+│   └── uploads/
+└── frontend/
+    ├── index.html
+    ├── package.json
+    ├── postcss.config.js
+    ├── tailwind.config.js
+    └── src/
+        ├── App.jsx
+        ├── index.css
+        ├── main.jsx
+        ├── assets/
+        │   └── logo.png
+        ├── components/
+        │   └── ui/
+        │       ├── Button.jsx
+        │       └── Card.jsx
+        └── pages/
+            ├── HomePage.jsx
+            └── UploadPage.jsx
 ```
 
 ---
@@ -64,16 +80,6 @@ venv\Scripts\activate      # Windows
 
 ```bash
 pip install -r requirements.txt
-```
-
-**Exemplo de `requirements.txt`**:
-
-```
-fastapi
-uvicorn
-python-multipart
-pillow
-openai
 ```
 
 3. **Configurar chave da OpenAI**:
@@ -114,8 +120,6 @@ npm run dev
 http://localhost:5173/
 ```
 
-> Obs: Ajuste a porta caso necessário.
-
 ---
 
 ## Rotas principais da aplicação
@@ -124,19 +128,13 @@ http://localhost:5173/
 | ------------- | ----------------------------------- |
 | `/`           | HomePage - Boas-vindas + navegação  |
 | `/upload`     | UploadPage - Envio de diagramas     |
-| `/analysis`   | AnalysisPage - Consultar análise    |
-| `/stride`     | StridePage - Visualizar STRIDE      |
-| `/report`     | ReportPage - Gerar/baixar relatório |
 
 ---
 
 ## Funcionalidades
 
-1. **HomePage**: tela inicial com links grandes para todas as seções.
-2. **UploadPage**: envia diagramas de arquitetura para análise automática usando IA.
-3. **AnalysisPage**: consulta os resultados da análise.
-4. **StridePage**: exibe ameaças detectadas segundo a metodologia STRIDE.
-5. **ReportPage**: gera e permite download de relatórios completos.
+1. **HomePage**: tela inicial com apresentação e navegação.
+2. **UploadPage**: envia diagramas de arquitetura para análise automática usando IA, identifica componentes, executa análise STRIDE e permite download de relatórios.
 
 ---
 
@@ -156,7 +154,7 @@ http://localhost:5173/
 
 * O frontend espera que o backend esteja rodando em `http://localhost:8000`. Ajuste se estiver em outro endereço ou porta.
 * A aplicação é responsiva e utiliza componentes estilizados (`Card`, `Button`) com animações suaves (`framer-motion`).
-* Relatórios são gerados em JSON, podendo ser baixados diretamente do frontend.
+* Relatórios são gerados em JSON e PDF, podendo ser baixados diretamente do frontend.
 
 ---
 
@@ -178,7 +176,6 @@ npm run dev
 ```
 
 3. Abrir `http://localhost:5173/` no navegador.
-4. Navegar via HomePage para Upload, Análise, STRIDE ou Relatório.
 
 ---
 
@@ -207,5 +204,3 @@ npm run dev
        |---------------------------------------------------->
        |                         |                         |
 ```
-
-> Fluxo resumido: o Frontend envia diagramas → Backend processa e chama OpenAI → Backend retorna análises → Frontend exibe e permite download de relatórios.
