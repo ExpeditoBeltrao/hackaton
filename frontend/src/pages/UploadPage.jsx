@@ -22,12 +22,11 @@ export default function UploadPage() {
   const [totalComponents, setTotalComponents] = useState(0);
   const [currentComponent, setCurrentComponent] = useState(0);
   const [strideCompleted, setStrideCompleted] = useState(false);
-  const [componentsRequested, setComponentsRequested] = useState(false);
 
   const steps = [
-    { id: 1, label: "Upload" },
-    { id: 2, label: "Componentes" },
-    { id: 3, label: "STRIDE" },
+    { id: 1, label: "Seleção Diagrama" },
+    { id: 2, label: "Identificação Componentes" },
+    { id: 3, label: "Análise Ameaças - STRIDE" },
   ];
 
   const strideThreats = [
@@ -57,7 +56,6 @@ export default function UploadPage() {
     "Elevation of Privilege": "Aumento indevido de privilégios no sistema.",
   };
 
-
   const markStepCompleted = (id) => {
     if (!completedSteps.includes(id)) setCompletedSteps(prev => [...prev, id]);
   };
@@ -82,10 +80,8 @@ export default function UploadPage() {
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-
     if (!selectedFile) return;
 
-    // Verifica a extensão
     if (!selectedFile.name.toLowerCase().endsWith(".png")) {
       alert("Apenas arquivos PNG são permitidos.");
       setFile(null);
@@ -93,7 +89,6 @@ export default function UploadPage() {
       return;
     }
 
-    // Opcional: validação pelo MIME type
     if (selectedFile.type !== "image/png") {
       alert("O arquivo selecionado não é um PNG válido.");
       setFile(null);
@@ -129,10 +124,9 @@ export default function UploadPage() {
       setStrideData({});
       markStepCompleted(1);
 
-      // chamar imediatamente a identificação de componentes
       if (res.data.analysis_id) {
         setLoadingComponents(true);
-        setStep(2); // muda o step imediatamente, mas mostra loading
+        setStep(2);
         try {
           const compRes = await axios.get(`http://localhost:8000/api/components/${res.data.analysis_id}`);
           setAnalysisData(prev => ({ ...prev, components: compRes.data.components }));
@@ -152,20 +146,15 @@ export default function UploadPage() {
     }
   };
 
-  // ----------------------------
-  // Step 2: Identificação de Componentes
-  // ----------------------------
   const handleIdentifyComponents = async (analysisIdParam = null) => {
     const analysisId = analysisIdParam || analysisData?.analysis_id;
     if (!analysisId) return;
 
     setLoadingComponents(true);
-    console.log("Iniciando identificação de componentes...");
     try {
       const res = await axios.get(`http://localhost:8000/api/components/${analysisId}`);
       setAnalysisData(prev => ({ ...prev, components: res.data.components }));
       markStepCompleted(2);
-      console.log("Componentes identificados:", res.data.components);
     } catch (error) {
       console.error("Erro ao identificar componentes:", error);
       alert("Falha na identificação de componentes.");
@@ -174,13 +163,10 @@ export default function UploadPage() {
     }
   };
 
-  // ----------------------------
-  // Step 3: STRIDE incremental
-  // ----------------------------
   const handleFetchStrideIncremental = async () => {
     if (!analysisData?.components) return;
     setLoadingStride(true);
-    setStrideCompleted(false); // reinicia
+    setStrideCompleted(false);
 
     const allComponents = Object.entries(analysisData.components).flatMap(([_, comps]) => comps);
     setTotalComponents(allComponents.length);
@@ -209,7 +195,7 @@ export default function UploadPage() {
     }
 
     setLoadingStride(false);
-    setStrideCompleted(true); // análise completa
+    setStrideCompleted(true);
     markStepCompleted(3);
   };
 
@@ -219,10 +205,9 @@ export default function UploadPage() {
     try {
       const res = await axios.get(
         `http://localhost:8000/api/report/${analysisData.analysis_id}/download?format=${format}`,
-        { responseType: "blob" } // importante para arquivos binários
+        { responseType: "blob" }
       );
 
-      // Cria URL temporária
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -236,17 +221,50 @@ export default function UploadPage() {
     }
   };
 
+  // ----------------------------
+  // Reset ao voltar para step 1
+  // ----------------------------
+  const handleStepChange = (newStep) => {
+    if (newStep === 1 && step !== 1) {
+      const hasProcessedData =
+        (analysisData?.components && Object.keys(analysisData.components).length > 0) ||
+        (strideCompleted && Object.keys(strideData).length > 0);
+
+      if (hasProcessedData) {
+        const confirmReset = window.confirm(
+          "Você já processou componentes ou STRIDE. Voltando para o Step 1, todos os dados processados serão limpos. Deseja continuar?"
+        );
+        if (!confirmReset) return;
+      }
+
+      // Limpa os dados processados
+      setAnalysisData(null);
+      setStrideData({});
+      setExpandedComponents({});
+      setProgress(0);
+      setTotalComponents(0);
+      setCurrentComponent(0);
+      setStrideCompleted(false);
+      setCompletedSteps([]);
+      setFile(null);
+      setPreviewUrl(null);
+    }
+
+    setStep(newStep);
+  };
+
   return (
     <motion.div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-gray-800 via-gray-700 to-gray-900 text-white p-6"
       initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
 
+      {/* Botão Início */}
       <div className="w-full max-w-4xl mb-6 flex justify-start">
         <div
           onClick={() => navigate("/")}
           className="flex items-center gap-2 cursor-pointer hover:text-gray-300 transition-colors"
         >
           <FaArrowLeft size={20} />
-          <span className="text-white font-medium">Voltar</span>
+          <span className="text-white font-medium">Início</span>
         </div>
       </div>
 
@@ -258,7 +276,7 @@ export default function UploadPage() {
           const isClickable = isCompleted || isCurrent;
           return (
             <div key={s.id} className="flex-1 flex flex-col items-center cursor-pointer"
-              onClick={() => isClickable && setStep(s.id)}>
+              onClick={() => isClickable && handleStepChange(s.id)}>
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2
                 ${isCompleted ? "bg-green-500" : isCurrent ? "bg-blue-500" : "bg-gray-500"}`}>{s.id}</div>
               <span className={`text-sm text-center ${isCompleted || isCurrent ? "text-white" : "text-gray-400"}`}>{s.label}</span>
@@ -331,7 +349,7 @@ export default function UploadPage() {
           initial="hidden"
           animate="visible"
         >
-          <h1 className="text-2xl font-bold mb-4 text-center">Step 2: Identificação de Componentes</h1>
+          <h1 className="text-2xl font-bold mb-4 text-center">2. Identificação de Componentes</h1>
 
           {loadingComponents ? (
             <div className="text-center text-gray-300 py-6">
@@ -393,7 +411,7 @@ export default function UploadPage() {
           initial="hidden"
           animate="visible"
         >
-          <h1 className="text-2xl font-bold mb-4 text-center">Step 3: Análise STRIDE</h1>
+          <h1 className="text-2xl font-bold mb-4 text-center">3. Análise Ameaças - STRIDE</h1>
 
           {strideCompleted && (
             <div className="flex gap-12 justify-center mt-10">

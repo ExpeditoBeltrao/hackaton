@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException, Query
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image 
 from reportlab.lib import colors
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -126,15 +126,13 @@ async def stride_incremental_post(data: dict):
 # --------------------
 # Download de relatório
 # --------------------
-# --------------------
-# Download de relatório
-# --------------------
 @app.get("/api/report/{analysis_id}/download")
 async def download_report(analysis_id: str, format: str = Query("json")):
     """
     Download de relatório em JSON ou PDF.
     Ex.: /api/report/123/download?format=json ou format=pdf
     """
+    
     # Caminhos de saída
     json_path = os.path.join(STORAGE, f"{analysis_id}_report.json")
     pdf_path = os.path.join(STORAGE, f"{analysis_id}_report.pdf")
@@ -144,15 +142,29 @@ async def download_report(analysis_id: str, format: str = Query("json")):
     if not analysis:
         raise HTTPException(status_code=404, detail="Análise não encontrada")
 
-    # Gera relatório atualizado
-    all_comps = [c for comps in analysis.get("components", {}).values() for c in comps]
-    report = generate_stride_report({"components": all_comps, "analysis_id": analysis_id})
+    # --- Monta o relatório a partir do incremental ---
+    # Se a análise incremental existir, usamos ela; caso contrário, gera STRIDE completo
+    if "stride_report_incremental" in analysis and analysis["stride_report_incremental"]:
+        # Junta todas as ameaças dos componentes incrementais
+        all_threats = []
+        for inc in analysis["stride_report_incremental"]:
+            all_threats.extend(inc.get("threats", []))
+        report = {
+            "analysis_id": analysis_id,
+            "components_count": len([c for comps in analysis.get("components", {}).values() for c in comps]),
+            "threats": all_threats,
+            "graph": {},  # se tiver grafo, pode incluir
+        }
+    else:
+        # fallback: STRIDE completo
+        all_comps = [c for comps in analysis.get("components", {}).values() for c in comps]
+        report = generate_stride_report({"components": all_comps, "analysis_id": analysis_id})
 
     # Salva JSON atualizado em disco
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=2)
 
-    # Retorna JSON
+    # --- Retorna JSON ---
     if format.lower() == "json":
         response = FileResponse(
             json_path,
@@ -162,7 +174,7 @@ async def download_report(analysis_id: str, format: str = Query("json")):
         response.headers["Access-Control-Allow-Origin"] = "*"
         return response
 
-    # Retorna PDF
+    # --- Retorna PDF ---
     elif format.lower() == "pdf":
         doc = SimpleDocTemplate(pdf_path, pagesize=letter)
         styles = getSampleStyleSheet()
@@ -173,35 +185,42 @@ async def download_report(analysis_id: str, format: str = Query("json")):
         elements.append(Spacer(1, 12))
 
         # Resumo
-        total_comps = report.get("components_count", 0)
-        total_threats = len(report.get("threats", []))
+        threats = report.get("threats", [])
+        grouped = defaultdict(list)
+        for t in threats:
+            grouped[t.get("component", "Sem nome")].append(t)
+
+        total_comps = len(grouped)
+        total_threats = len(threats)
         elements.append(Paragraph(f"Total de componentes: {total_comps}", styles["Normal"]))
         elements.append(Paragraph(f"Total de ameaças: {total_threats}", styles["Normal"]))
         elements.append(Spacer(1, 12))
 
-        # Tabela de ameaças
-        threats = report.get("threats", [])
-        if threats:
-            data = [["Tipo", "Descrição", "Mitigação"]]
-            for t in threats:
-                data.append([
-                    t.get("threat_type", "-"),
-                    t.get("description", "-"),
-                    t.get("mitigation", "-")
-                ])
-            table = Table(data, colWidths=[100, 250, 150])
-            table.setStyle(TableStyle([
-                ("BACKGROUND", (0,0), (-1,0), colors.grey),
-                ("TEXTCOLOR", (0,0), (-1,0), colors.whitesmoke),
-                ("ALIGN", (0,0), (-1,-1), "LEFT"),
-                ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-                ("FONTSIZE", (0,0), (-1,0), 10),
-                ("BOTTOMPADDING", (0,0), (-1,0), 8),
-                ("BACKGROUND", (0,1), (-1,-1), colors.beige),
-                ("GRID", (0,0), (-1,-1), 0.5, colors.black),
-            ]))
-            elements.append(table)
-            elements.append(Spacer(1, 12))
+        # Tabelas por componente
+        if grouped:
+            for comp_name, comp_threats in grouped.items():
+                elements.append(Paragraph(f"Componente: {comp_name}", styles["Heading2"]))
+                data = [["Tipo", "Descrição", "Mitigação"]]
+                for idx, t in enumerate(comp_threats, start=1):
+                    data.append([
+                        Paragraph(f"{idx}. {t.get('threat_type', '-')}", styles["Normal"]),
+                        Paragraph(t.get("description", "-"), styles["Normal"]),
+                        Paragraph(t.get("mitigation", "-"), styles["Normal"]),
+                    ])
+                table = Table(data, colWidths=[100, "*", 150])
+                table.setStyle(TableStyle([
+                    ("BACKGROUND", (0,0), (-1,0), colors.grey),
+                    ("TEXTCOLOR", (0,0), (-1,0), colors.whitesmoke),
+                    ("ALIGN", (0,0), (-1,-1), "LEFT"),
+                    ("VALIGN", (0,0), (-1,-1), "TOP"),
+                    ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+                    ("FONTSIZE", (0,0), (-1,0), 10),
+                    ("BOTTOMPADDING", (0,0), (-1,0), 8),
+                    ("BACKGROUND", (0,1), (-1,-1), colors.beige),
+                    ("GRID", (0,0), (-1,-1), 0.5, colors.black),
+                ]))
+                elements.append(table)
+                elements.append(Spacer(1, 12))
         else:
             elements.append(Paragraph("Nenhuma ameaça detectada.", styles["Normal"]))
 
