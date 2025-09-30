@@ -106,7 +106,7 @@ export default function UploadPage() {
     }
   }, [step]);
 
-  const apiUrl = import.meta.env.VITE_API_URL;
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   // ----------------------------
   // Step 1: Upload
@@ -387,6 +387,20 @@ export default function UploadPage() {
                   );
                 })}
               </div>
+
+              {/* Exemplo para Step 2 (após análise) */}
+              {analysisData?.image_url && (
+                <div className="flex flex-col items-center mb-6">
+                  <img
+                    src={`${apiUrl}${analysisData.image_url}`}
+                    alt="Diagrama processado"
+                    className="w-48 h-auto rounded-lg border border-gray-600 shadow-md"
+                  />
+                  <p className="text-sm text-gray-400 mt-2">
+                    Diagrama processado pelo backend
+                  </p>
+                </div>
+              )}
 
               {/* Botão Próximo: Análise STRIDE */}
               <div className="mt-6 flex justify-center">

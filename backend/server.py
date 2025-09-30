@@ -9,25 +9,37 @@ from fastapi.middleware.cors import CORSMiddleware
 import uuid, os, json
 from collections import defaultdict
 from processing import analyze_image, generate_stride_report, generate_stride_for_component
+import tempfile
+from fastapi.staticfiles import StaticFiles
+
+# Diretório temporário do sistema
+TEMP_DIR = tempfile.gettempdir()
+UPLOADS_DIR = os.path.join(TEMP_DIR, "uploads")
+REPORTS_DIR = os.path.join(TEMP_DIR, "reports")
+DATA_DIR = os.path.join(TEMP_DIR, "data")
+STATIC_DIR = os.path.join(TEMP_DIR, "static")
+
+os.makedirs(UPLOADS_DIR, exist_ok=True)
+os.makedirs(REPORTS_DIR, exist_ok=True)
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(STATIC_DIR, exist_ok=True)
 
 app = FastAPI()
+
+analyses = {}
 
 # CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", 
+                   "https://fiapswsecurity.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-analyses = {}
-STORAGE = "data"
-os.makedirs(STORAGE, exist_ok=True)
-os.makedirs("uploads", exist_ok=True)
-
-STORAGE = "reports"
-os.makedirs(STORAGE, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # --------------------
 # Step 1: Upload
@@ -36,7 +48,7 @@ os.makedirs(STORAGE, exist_ok=True)
 async def upload_file(file: UploadFile = File(...)):
     analysis_id = str(uuid.uuid4())
     try:
-        file_path = os.path.join("uploads", f"{analysis_id}_{file.filename}")
+        file_path = os.path.join(UPLOADS_DIR, f"{analysis_id}_{file.filename}")
         with open(file_path, "wb") as f:
             f.write(await file.read())
 
@@ -44,7 +56,7 @@ async def upload_file(file: UploadFile = File(...)):
         return {"analysis_id": analysis_id, "filename": file.filename, "message": "Upload realizado com sucesso"}
     except Exception as e:
         return {"analysis_id": analysis_id, "error": str(e)}
-
+    
 # --------------------
 # Step 2: Componentes
 # --------------------
@@ -132,10 +144,10 @@ async def download_report(analysis_id: str, format: str = Query("json")):
     Download de relatório em JSON ou PDF.
     Ex.: /api/report/123/download?format=json ou format=pdf
     """
-    
+
     # Caminhos de saída
-    json_path = os.path.join(STORAGE, f"{analysis_id}_report.json")
-    pdf_path = os.path.join(STORAGE, f"{analysis_id}_report.pdf")
+    json_path = os.path.join(REPORTS_DIR, f"{analysis_id}_report.json")
+    pdf_path = os.path.join(REPORTS_DIR, f"{analysis_id}_report.pdf")
 
     # Recupera análise em memória
     analysis = analyses.get(analysis_id)

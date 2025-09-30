@@ -2,8 +2,15 @@
 import json, os, shutil, base64, re
 import openai
 from collections import defaultdict
+import tempfile
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
+TEMP_DIR = tempfile.gettempdir()
+DATA_DIR = os.path.join(TEMP_DIR, "data")
+STATIC_DIR = os.path.join(TEMP_DIR, "static")
+os.makedirs(DATA_DIR, exist_ok=True)
+os.makedirs(STATIC_DIR, exist_ok=True)
 
 # --------------------
 # Análise da imagem
@@ -60,12 +67,15 @@ def analyze_image(image_path, analysis_id=None):
         data["analysis_id"] = analysis_id
         data["image_url"] = f"/static/{os.path.basename(image_path)}"
 
-        os.makedirs("data", exist_ok=True)
-        with open(os.path.join("data", f"{analysis_id}.json"), "w", encoding="utf-8") as f:
+        # Salvar JSON de análise
+        with open(os.path.join(DATA_DIR, f"{analysis_id}.json"), "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
-        os.makedirs("static", exist_ok=True)
-        shutil.copy(image_path, os.path.join("static", os.path.basename(image_path)))
+        # Copiar imagem para pasta estática temporária
+        shutil.copy(image_path, os.path.join(STATIC_DIR, os.path.basename(image_path)))
+
+        # Atualize a URL da imagem para refletir o novo caminho (se necessário)
+        data["image_url"] = f"/static/{os.path.basename(image_path)}"
 
         return data
     except Exception as e:

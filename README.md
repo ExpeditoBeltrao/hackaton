@@ -133,8 +133,8 @@ http://localhost:5173/
 
 ## Funcionalidades
 
-1. **HomePage**: tela inicial com apresentação e navegação.
-2. **UploadPage**: envia diagramas de arquitetura para análise automática usando IA, identifica componentes, executa análise STRIDE e permite download de relatórios.
+1. **HomePage**: Tela inicial com apresentação e navegação.
+2. **UploadPage**: Envia diagramas de arquitetura para análise automática usando IA, identifica componentes, executa análise STRIDE e permite download de relatórios.
 
 ---
 
@@ -142,11 +142,6 @@ http://localhost:5173/
 
 * O backend utiliza a API da OpenAI para processar a imagem do diagrama e gerar um **modelo de ameaças STRIDE**.
 * Para funcionar, é necessário ter uma chave válida da OpenAI configurada como variável de ambiente (`OPENAI_API_KEY`).
-* O fluxo é:
-
-  1. Usuário envia diagrama → `/api/upload`
-  2. Backend processa a imagem → chama a OpenAI → retorna análise
-  3. Frontend exibe os resultados e STRIDE threats
 
 ---
 
@@ -179,28 +174,6 @@ npm run dev
 
 ---
 
-## Diagrama de fluxo do projeto
+## Diagrama de sequência do projeto
 
-```text
-+----------------+       +----------------+       +---------------------+
-|                |       |                |       |                     |
-|  Frontend      | <-->  |   Backend      | <-->  |   OpenAI API        |
-|  (React + UI)  |       | (FastAPI +     |       | (Processamento e    |
-|                |       |  processing.py)|       |  geração STRIDE)    |
-+----------------+       +----------------+       +---------------------+
-       |                         |                         |
-       | Upload de Diagrama      |                         |
-       |----------------------->|                         |
-       |                         |                         |
-       |                         | Chamada OpenAI API      |
-       |                         |------------------------>|
-       |                         |                         |
-       |                         | Recebe análise STRIDE   |
-       |                         |<------------------------|
-       | Recebe resultado        |                         |
-       |<-----------------------|                         |
-       |                         |                         |
-       | Mostra relatório / STRIDE Threats                   |
-       |---------------------------------------------------->
-       |                         |                         |
-```
+![alt text](.\frontend\src\assets\diagramasequencia.png)
