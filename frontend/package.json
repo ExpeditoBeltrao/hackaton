@@ -15,6 +15,7 @@
     "tailwind-variants": "^0.1.20",
     "tsparticles": "^3.9.1"
   },
+  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
