@@ -106,6 +106,8 @@ export default function UploadPage() {
     }
   }, [step]);
 
+  const apiUrl = import.meta.env.VITE_API_URL;
+
   // ----------------------------
   // Step 1: Upload
   // ----------------------------
@@ -116,7 +118,7 @@ export default function UploadPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const res = await axios.post("http://localhost:8000/api/upload", formData, {
+      const res = await axios.post(`${apiUrl}/api/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -128,7 +130,7 @@ export default function UploadPage() {
         setLoadingComponents(true);
         setStep(2);
         try {
-          const compRes = await axios.get(`http://localhost:8000/api/components/${res.data.analysis_id}`);
+          const compRes = await axios.get(`${apiUrl}/api/components/${res.data.analysis_id}`);
           setAnalysisData(prev => ({ ...prev, components: compRes.data.components }));
           markStepCompleted(2);
         } catch (err) {
@@ -152,7 +154,7 @@ export default function UploadPage() {
 
     setLoadingComponents(true);
     try {
-      const res = await axios.get(`http://localhost:8000/api/components/${analysisId}`);
+      const res = await axios.get(`${apiUrl}/api/components/${analysisId}`);
       setAnalysisData(prev => ({ ...prev, components: res.data.components }));
       markStepCompleted(2);
     } catch (error) {
@@ -174,7 +176,7 @@ export default function UploadPage() {
 
     for (const comp of allComponents) {
       try {
-        const res = await axios.post("http://localhost:8000/api/stride_incremental", {
+        const res = await axios.post(`${apiUrl}/api/stride_incremental`, {
           analysis_id: analysisData.analysis_id,
           component: comp
         });
@@ -204,7 +206,7 @@ export default function UploadPage() {
 
     try {
       const res = await axios.get(
-        `http://localhost:8000/api/report/${analysisData.analysis_id}/download?format=${format}`,
+        `${apiUrl}/api/report/${analysisData.analysis_id}/download?format=${format}`,
         { responseType: "blob" }
       );
 
