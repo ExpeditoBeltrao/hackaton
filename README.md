@@ -23,26 +23,27 @@ Aplicação web de análise de vulnerabilidades de sistemas baseada na metodolog
 
 ---
 
+## Deploy e configuração
+
+### Backend (Render)
+- O backend está publicado em Render e já configurado para uso temporário de arquivos.
+- Não é necessário configuração adicional para uso público.
+
+### Frontend (Vercel)
+- O frontend está publicado em Vercel e já aponta para o backend no Render.
+- Não é necessário configuração adicional para uso público.
+
+---
+
 ## Estrutura do projeto
 
 ```
 .
 ├── README.md
-├── .vscode/
-│   └── settings.json
 ├── backend/
 │   ├── processing.py
 │   ├── requirements.txt
 │   ├── server.py
-│   ├── server_openai.py
-│   ├── __pycache__/
-│   │   ├── processing.cpython-312.pyc
-│   │   ├── server.cpython-312.pyc
-│   │   └── server_openai.cpython-312.pyc
-│   ├── data/
-│   ├── reports/
-│   ├── static/
-│   └── uploads/
 └── frontend/
     ├── index.html
     ├── package.json
@@ -65,6 +66,42 @@ Aplicação web de análise de vulnerabilidades de sistemas baseada na metodolog
 
 ---
 
+## Visão geral rápida
+
+A aplicação tem o frontend hospedado em [https://fiapswsecurity.vercel.app/](https://fiapswsecurity.vercel.app/) e o backend em [https://hackaton-7orn.onrender.com/](https://hackaton-7orn.onrender.com/).  
+Se preferir, é possível executar tudo localmente — veja o [Veja como executar localmente](#executar-localmente) para os passos de instalação e execução local.
+
+---
+
+## Passo a passo (recomendado para uso imediato)
+
+1. **“Acordar” o backend (Render):**  
+   Abra [https://hackaton-7orn.onrender.com/docs](https://hackaton-7orn.onrender.com/docs) no seu navegador e aguarde o carregamento do Swagger UI.  
+   Isso “acorda” o servidor hospedado (se estiver em modo de hibernação).
+
+2. **Executar a aplicação no frontend:**  
+   Depois que o Swagger carregar com sucesso, acesse [https://fiapswsecurity.vercel.app/](https://fiapswsecurity.vercel.app/) e navegue pela interface para executar a transação desejada.
+
+3. **Confirmação visual:**  
+   Ao abrir o frontend, siga os fluxos na tela para submeter a transação; o frontend fará chamadas ao backend já acordado.
+
+---
+
+## Execução local (opcional)
+
+Se preferir rodar tudo localmente, siga as instruções completas em [Veja como executar localmente](#executar-localmente) (instalação de dependências, variáveis de ambiente e comandos de start).
+
+---
+
+## Observações úteis
+
+- Se o backend demorar alguns segundos para responder após abrir `/docs`, aguarde; isso é normal quando o serviço estava ocioso.
+- Caso encontre erros de CORS ou de conexão, verifique se você está usando as URLs corretas e consulte o README para configuração local (variáveis de ambiente).
+- Para testes repetidos, primeiro verifique `/docs` para garantir que o backend está ativo antes de usar o frontend.
+
+---
+
+## Executar localmente
 ## Backend - Instalação e execução
 
 1. **Criar ambiente virtual**:
@@ -141,7 +178,7 @@ http://localhost:5173/
 ## Integração com OpenAI
 
 * O backend utiliza a API da OpenAI para processar a imagem do diagrama e gerar um **modelo de ameaças STRIDE**.
-* Para funcionar, é necessário ter uma chave válida da OpenAI configurada como variável de ambiente (`OPENAI_API_KEY`).
+* Para funcionar, é necessário ter uma chave válida da OpenAI configurada como variável de ambiente (`OPENAI_API_KEY`). Foi disponibilizada uma chave válida no arquivo PDF com a apresentação do trabalho.
 
 ---
 
