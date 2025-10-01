@@ -213,4 +213,4 @@ npm run dev
 
 ## Diagrama de sequência do projeto
 
-![alt text](.\frontend\src\assets\diagramasequencia.png)
+![alt text](frontend/src/assets/diagramasequencia.png)
